@@ -1,0 +1,71 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/openjdk:11-jdk
+    working_directory: ~/repo
+    environment:
+      MAVEN_OPTS: -Xmx3200m
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "pom.xml" }}
+            - v1-dependencies-
+      - run: mvn dependency:go-offline
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-dependencies-{{ checksum "pom.xml" }}
+      - run: mvn package -DskipTests
+      - persist_to_workspace:
+          root: ~/repo
+          paths:
+          - target
+  deploy_to_staging:
+    docker:
+      - image: google/cloud-sdk
+    working_directory: ~/repo
+    environment:
+      - PROJECT_NAME: "space-program"
+      - GOOGLE_PROJECT_ID: "space-program-1"
+      - GOOGLE_COMPUTE_ZONE: "europe-north1-a"
+      - GOOGLE_CLUSTER_NAME: "space-program-cluster-1"
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/repo/target
+      - run:
+          name: Setup Google Cloud SDK
+          command: |
+            echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-
+            gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+            gcloud --quiet config set compute/zone ${GOOGLE_COMPUTE_ZONE}
+            gcloud --quiet container clusters get-credentials ${GOOGLE_CLUSTER_NAME}
+      - setup_remote_docker
+      - run:
+          name: Docker build and push
+          command: |
+            apt-get install tree
+            tree
+            docker build -t ${PROJECT_NAME} .
+            docker tag ${PROJECT_NAME} eu.gcr.io/${GOOGLE_PROJECT_ID}/${PROJECT_NAME}:${CIRCLE_SHA1}
+            gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://eu.gcr.io
+            docker push eu.gcr.io/${GOOGLE_PROJECT_ID}/${PROJECT_NAME}:${CIRCLE_SHA1}
+#      - run:
+#          name: Deploy to Kubernetes
+#          command: |
+#            envsubst < ${HOME}/project/k8s.yml > ${HOME}/patched_k8s.yml
+#            kubectl apply -f ${HOME}/patched_k8s.yml
+#            kubectl rollout status deployment/${PROJECT_NAME}
+workflows:
+  version: 2
+  build_test_deploy:
+    jobs:
+      - build
+      - deploy_to_staging:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
