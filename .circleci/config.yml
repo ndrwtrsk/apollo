@@ -27,7 +27,7 @@ jobs:
       - image: google/cloud-sdk
     working_directory: ~/repo
     environment:
-      - PROJECT_NAME: "space-program"
+      - PROJECT_NAME: "apollo"
       - GOOGLE_PROJECT_ID: "space-program-1"
       - GOOGLE_COMPUTE_ZONE: "europe-north1-a"
       - GOOGLE_CLUSTER_NAME: "space-program-cluster-1"
