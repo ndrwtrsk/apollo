@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${PROJECT_NAME}
+  labels:
+    app: ${PROJECT_NAME}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${PROJECT_NAME}
+  template:
+    metadata:
+      labels:
+        app: ${PROJECT_NAME}
+    spec:
+      containers:
+        - name: ${PROJECT_NAME}
+          image: eu.gcr.io/${GOOGLE_PROJECT_ID}/${PROJECT_NAME}:${CIRCLE_SHA1}
+          ports:
+            - name: api
+              containerPort: 9000
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: api
+            initialDelaySeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+            timeoutSeconds: 1
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: api
+            initialDelaySeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+            timeoutSeconds: 1
+            periodSeconds: 10
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: ${PROJECT_NAME}
+spec:
+  selector:
+    app: ${PROJECT_NAME}
+  ports:
+    - protocol: api
+      port: 9000
+      targetPort: 9000
+  type: LoadBalancer
