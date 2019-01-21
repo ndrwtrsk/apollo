@@ -44,11 +44,6 @@ jobs:
             gcloud --quiet container clusters get-credentials ${GOOGLE_CLUSTER_NAME}
       - setup_remote_docker
       - run:
-          name: Version
-          command: |
-            ./release.sh
-            version=`cat VERSION`
-      - run:
           name: Docker build and push
           command: |
             docker build -t ${PROJECT_NAME} .
