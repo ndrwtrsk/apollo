@@ -34,7 +34,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at: ~/repo/target
+          at: ~/repo
       - run:
           name: Setup Google Cloud SDK
           command: |
