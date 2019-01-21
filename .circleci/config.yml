@@ -54,8 +54,8 @@ jobs:
           name: Deploy to Kubernetes
           command: |
             apt-get install -qq -y gettext
-            envsubst < ${HOME}/repo/k8s.yml > ${HOME}/patched_k8s.yml
-            kubectl apply -f ${HOME}/patched_k8s.yml
+            envsubst < ${HOME}/repo/k8s.yaml > ${HOME}/patched_k8s.yaml
+            kubectl apply -f ${HOME}/patched_k8s.yaml
             kubectl rollout status deployment/${PROJECT_NAME}
 workflows:
   version: 2
