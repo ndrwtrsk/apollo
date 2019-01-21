@@ -48,7 +48,7 @@ spec:
   selector:
     app: ${PROJECT_NAME}
   ports:
-    - protocol: api
+    - protocol: tcp
       port: 9000
       targetPort: 9000
   type: LoadBalancer
