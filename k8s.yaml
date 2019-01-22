@@ -11,6 +11,8 @@ spec:
       app: ${PROJECT_NAME}
   template:
     metadata:
+      annotations:
+        ad.datadoghq.com/${PROJECT_NAME}.logs: '[{"source":"${PROJECT_NAME}","service":"${PROJECT_NAME}"}]'
       labels:
         app: ${PROJECT_NAME}
     spec:
